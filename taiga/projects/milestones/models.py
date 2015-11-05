@@ -148,9 +148,23 @@ class Milestone(WatchedModelMixin, models.Model):
     def shared_increment_points(self):
         return self._get_increment_points()["shared_increment"]
 
-    def closed_points_by_date(self, date):
+    def total_closed_points_by_date(self, date):
+        """
         return self._get_user_stories_points([
             us for us in self.user_stories.filter(
                 finish_date__lt=date + datetime.timedelta(days=1)
             ).prefetch_related('role_points', 'role_points__points') if us.is_closed
         ])
+        """
+        for us in self.user_stories.all():
+            us_tasks = us.tasks
+            us_tasks_counter = us_tasks.count()
+            us_tasks_closed_counter = us_tasks.filter(finished_date__lt=date + datetime.timedelta(days=1)).count()
+            total_us_points = sum(self._get_user_stories_points([us]).values())
+
+            closed_points = 0
+            if us_tasks_counter > 0 and total_us_points > 0 and us_tasks_closed_counter > 0:
+                closed_points = total_us_points / (us_tasks_counter / us_tasks_closed_counter)
+                closed_points = int(closed_points)
+
+        return closed_points

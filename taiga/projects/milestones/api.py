@@ -108,7 +108,7 @@ class MilestoneViewSet(HistoryResourceMixin, WatchedResourceMixin, ModelCrudView
             milestone_stats['days'].append({
                 'day': current_date,
                 'name': current_date.day,
-                'open_points':  sumTotalPoints - sum(milestone.closed_points_by_date(current_date).values()),
+                'open_points':  sumTotalPoints - milestone.total_closed_points_by_date(current_date),
                 'optimal_points': optimal_points,
             })
             current_date = current_date + datetime.timedelta(days=1)
