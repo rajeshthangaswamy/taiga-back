@@ -105,6 +105,8 @@ NUM_ATTACHMENTS = getattr(settings, "SAMPLE_DATA_NUM_ATTACHMENTS", (0, 4))
 NUM_LIKES = getattr(settings, "SAMPLE_DATA_NUM_LIKES", (0, 10))
 NUM_VOTES = getattr(settings, "SAMPLE_DATA_NUM_VOTES", (0, 10))
 NUM_WATCHERS = getattr(settings, "SAMPLE_DATA_NUM_PROJECT_WATCHERS", (0, 8))
+TOTAL_FEATURED_PROJECTS = 3
+
 
 class Command(BaseCommand):
     sd = SampleDataHelper(seed=12345678901)
@@ -226,6 +228,13 @@ class Command(BaseCommand):
             project.save()
 
             self.create_likes(project)
+
+        # Set featured projects
+        featured_projects = Project.objects.all().order_by("?")[:TOTAL_FEATURED_PROJECTS]
+        for p in featured_projects:
+            p.is_featured = True
+            p.save()
+
 
     def create_attachment(self, obj, order):
         attached_file = self.sd.file_from_directory(*ATTACHMENT_SAMPLE_DATA)
