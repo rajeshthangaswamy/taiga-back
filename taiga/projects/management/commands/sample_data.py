@@ -105,7 +105,7 @@ NUM_ATTACHMENTS = getattr(settings, "SAMPLE_DATA_NUM_ATTACHMENTS", (0, 4))
 NUM_LIKES = getattr(settings, "SAMPLE_DATA_NUM_LIKES", (0, 10))
 NUM_VOTES = getattr(settings, "SAMPLE_DATA_NUM_VOTES", (0, 10))
 NUM_WATCHERS = getattr(settings, "SAMPLE_DATA_NUM_PROJECT_WATCHERS", (0, 8))
-TOTAL_FEATURED_PROJECTS = 3
+FEATURED_PROJECTS_POSITIONS = [0, 1, 2]
 LOOKING_FOR_PEOPLE_PROJECTS_POSITIONS = [0, 1, 2]
 
 class Command(BaseCommand):
@@ -228,12 +228,6 @@ class Command(BaseCommand):
             project.save()
 
             self.create_likes(project)
-
-        # Set featured projects
-        featured_projects = Project.objects.all().order_by("?")[:TOTAL_FEATURED_PROJECTS]
-        for p in featured_projects:
-            p.is_featured = True
-            p.save()
 
 
     def create_attachment(self, obj, order):
@@ -465,7 +459,8 @@ class Command(BaseCommand):
                                          total_story_points=self.sd.int(600, 3000),
                                          total_milestones=self.sd.int(5,10),
                                          tags=self.sd.words(1, 10).split(" "),
-                                         is_looking_for_people=counter in LOOKING_FOR_PEOPLE_PROJECTS_POSITIONS)
+                                         is_looking_for_people=counter in LOOKING_FOR_PEOPLE_PROJECTS_POSITIONS,
+                                         is_featured=cointer in FEATURED_PROJECTS_POSITIONS)
 
         project.is_kanban_activated = True
         project.save()
