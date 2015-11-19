@@ -106,7 +106,7 @@ NUM_LIKES = getattr(settings, "SAMPLE_DATA_NUM_LIKES", (0, 10))
 NUM_VOTES = getattr(settings, "SAMPLE_DATA_NUM_VOTES", (0, 10))
 NUM_WATCHERS = getattr(settings, "SAMPLE_DATA_NUM_PROJECT_WATCHERS", (0, 8))
 TOTAL_FEATURED_PROJECTS = 3
-
+LOOKING_FOR_PEOPLE_PROJECTS_POSITIONS = [0, 1, 2]
 
 class Command(BaseCommand):
     sd = SampleDataHelper(seed=12345678901)
@@ -464,7 +464,8 @@ class Command(BaseCommand):
                                          public_permissions=public_permissions,
                                          total_story_points=self.sd.int(600, 3000),
                                          total_milestones=self.sd.int(5,10),
-                                         tags=self.sd.words(1, 10).split(" "))
+                                         tags=self.sd.words(1, 10).split(" "),
+                                         is_looking_for_people=counter in LOOKING_FOR_PEOPLE_PROJECTS_POSITIONS)
 
         project.is_kanban_activated = True
         project.save()
@@ -509,4 +510,3 @@ class Command(BaseCommand):
                 obj.add_watcher(user)
             else:
                 obj.add_watcher(user, notify_level)
-
