@@ -1,6 +1,4 @@
 # Copyright (C) 2014-2015 Andrey Antukh <niwi@niwi.be>
-# Copyright (C) 2014-2015 Jesús Espino <jespinog@gmail.com>
-# Copyright (C) 2014-2015 David Barragán <bameda@dbarragan.com>
 # This program is free software: you can redistribute it and/or modify
 # it under the terms of the GNU Affero General Public License as
 # published by the Free Software Foundation, either version 3 of the
@@ -14,15 +12,11 @@
 # You should have received a copy of the GNU Affero General Public License
 # along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
-from taiga.base.api import serializers
+from taiga.projects.history import services as history_service
 
-
-class FanResourceSerializerMixin(serializers.ModelSerializer):
-    is_fan = serializers.SerializerMethodField("get_is_fan")
-
-    def get_is_fan(self, obj):
-        if "request" in self.context:
-            user = self.context["request"].user
-            return user.is_authenticated() and user.is_fan(obj)
-
-        return False
+def on_new_history_entry(sender, instance, created, **kwargs):
+    model = history_service.get_model_from_key(instance.key)
+    pk = history_service.get_pk_from_key(instance.key)
+    obj = model.objects.get(pk=pk)
+    project = obj.project
+    project.refresh_totals()
