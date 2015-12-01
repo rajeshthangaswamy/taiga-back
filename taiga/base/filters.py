@@ -478,6 +478,11 @@ class WatchersFilter(FilterBackend):
 
         return super().filter_queryset(request, queryset, view)
 
+class ClientRequirementFilter(BaseRelatedFieldsFilter):
+    filter_name = 'client_requirement'
+
+class TeamRequirementFilter(BaseRelatedFieldsFilter):
+    filter_name = 'team_requirement'
 
 #####################################################################
 # Text search filters

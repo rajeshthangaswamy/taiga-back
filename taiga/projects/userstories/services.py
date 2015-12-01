@@ -219,6 +219,7 @@ def _get_userstories_statuses(project, queryset):
 
     result = []
     for id, name, color, order, count in rows:
+        print(name) 
         result.append({
             "id": id,
             "name": _(name),
@@ -307,8 +308,10 @@ def _get_userstories_owners(project, queryset):
 
 
 def _get_userstories_tags(queryset):
+    
     tags = []
     for t_list in queryset.values_list("tags", flat=True):
+        print(t_list) 
         if t_list is None:
             continue
         tags += list(t_list)
@@ -318,16 +321,96 @@ def _get_userstories_tags(queryset):
     return sorted(tags, key=itemgetter("name"))
 
 
+def _get_userstories_client_requirements(project, queryset):
+     #return True
+     # import logging
+     # logger = logging.getLogger(__name__)
+     # # logger.info('=================================' + queryset.values_list('client_requirement'))
+     # # logger.info('=================================' + queryset.values_list('client_requirement'))
+    #client_requirement = []
+     #for c_list in queryset.values_list("client_requirement", flat=True):
+     #     logger.info('____________________ c_list: ' + str(c_list))
+    #client_requirement += queryset.values_list("client_requirement", flat=True)
+    compiler = connection.ops.compiler(queryset.query.compiler)(queryset.query, connection, None)
+    queryset_where_tuple = queryset.query.where.as_sql(compiler, connection)
+    where = queryset_where_tuple[0]
+    where_params = queryset_where_tuple[1]
+    
+    extra_sql = """
+      SELECT "project_id",
+              "client_requirement"
+              FROM "userstories_userstory" 
+              INNER JOIN "projects_project" ON
+                                ("userstories_userstory"."project_id" = "projects_project"."id")
+        
+       WHERE ("client_requirement" IS TRUE AND "is_closed" IS FALSE);
+    """.format(where=where)
+
+    with closing(connection.cursor()) as cursor:
+        cursor.execute(extra_sql, where_params + [project.id])
+        rows = cursor.fetchall()
+
+    result = []
+    for project_id, client_requirement in rows:
+        if project_id == project.id:
+            result.append({
+            "project_id": project_id,
+            "client_requirement": client_requirement,
+            })
+    return sorted(result, key=itemgetter("project_id"))
+          #if c_list is None: # and us.client_requirement is True: # !!!
+              #continue                       
+          #client_requirements += c_list 
+     #print(client_requirement)
+     #return client_requirement 
+
+
+def _get_userstories_team_requirements(project, queryset):
+    #team_requirement = []
+    #team_requirement += queryset.values_list("team_requirement", flat=True)
+    compiler = connection.ops.compiler(queryset.query.compiler)(queryset.query, connection, None)
+    queryset_where_tuple = queryset.query.where.as_sql(compiler, connection)
+    where = queryset_where_tuple[0]
+    where_params = queryset_where_tuple[1]
+
+    extra_sql = """
+      SELECT "project_id",
+              "team_requirement"
+              FROM "userstories_userstory" 
+              INNER JOIN "projects_project" ON
+                                ("userstories_userstory"."project_id" = "projects_project"."id")
+        
+       WHERE ("team_requirement" IS TRUE AND "is_closed" IS FALSE);
+    """.format(where=where)
+
+    with closing(connection.cursor()) as cursor:
+        cursor.execute(extra_sql, where_params + [project.id])
+        rows = cursor.fetchall()
+
+    result = []
+    for project_id, team_requirement in rows:
+        if project_id == project.id:
+            result.append({
+            "project_id": project_id,
+            "team_requirement": team_requirement,
+            })
+    return sorted(result, key=itemgetter("project_id"))
+    #print(team_requirement)
+    #return team_requirement
+
 def get_userstories_filters_data(project, querysets):
     """
     Given a project and an userstories queryset, return a simple data structure
     of all possible filters for the userstories in the queryset.
     """
+    print(project)
     data = OrderedDict([
         ("statuses", _get_userstories_statuses(project, querysets["statuses"])),
         ("assigned_to", _get_userstories_assigned_to(project, querysets["assigned_to"])),
         ("owners", _get_userstories_owners(project, querysets["owners"])),
         ("tags", _get_userstories_tags(querysets["tags"])),
+        ("client_requirement", _get_userstories_client_requirements(project, querysets["client_requirement"])),
+        ("team_requirement", _get_userstories_team_requirements(project, querysets["team_requirement"])),
     ])
-
+    print(data)
     return data

@@ -53,6 +53,8 @@ class UserStoryViewSet(OCCResourceMixin, VotedResourceMixin, HistoryResourceMixi
                        filters.AssignedToFilter,
                        filters.StatusesFilter,
                        filters.TagsFilter,
+                       filters.ClientRequirementFilter,
+                       filters.TeamRequirementFilter,
                        filters.WatchersFilter,
                        filters.QFilter,
                        filters.OrderByFilterMixin)
@@ -60,6 +62,8 @@ class UserStoryViewSet(OCCResourceMixin, VotedResourceMixin, HistoryResourceMixi
                                 filters.AssignedToFilter,
                                 filters.StatusesFilter,
                                 filters.TagsFilter,
+                                filters.ClientRequirementFilter,
+                                filters.TeamRequirementFilter,
                                 filters.WatchersFilter)
     filter_fields = ["project",
                      "milestone",
@@ -170,14 +174,19 @@ class UserStoryViewSet(OCCResourceMixin, VotedResourceMixin, HistoryResourceMixi
         assigned_to_filter_backends = (f for f in filter_backends if f != filters.AssignedToFilter)
         owners_filter_backends = (f for f in filter_backends if f != filters.OwnersFilter)
         tags_filter_backends = (f for f in filter_backends if f != filters.TagsFilter)
-
+        client_requirement_filter_backends = (f for f in filter_backends if f != filters.ClientRequirementFilter)
+        team_requirement_filter_backends = (f for f in filter_backends if f != filters.TeamRequirementFilter)
+        
         queryset = self.get_queryset()
         querysets = {
             "statuses": self.filter_queryset(queryset, filter_backends=statuses_filter_backends),
             "assigned_to": self.filter_queryset(queryset, filter_backends=assigned_to_filter_backends),
             "owners": self.filter_queryset(queryset, filter_backends=owners_filter_backends),
-            "tags": self.filter_queryset(queryset)
+            "tags": self.filter_queryset(queryset),
+            "client_requirement": self.filter_queryset(queryset, filter_backends=client_requirement_filter_backends),
+            "team_requirement": self.filter_queryset(queryset, filter_backends=team_requirement_filter_backends)
         }
+        #print(querysets)
         return response.Ok(services.get_userstories_filters_data(project, querysets))
 
     @list_route(methods=["GET"])
