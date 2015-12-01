@@ -24,7 +24,7 @@ def _get_user_project_membership(user, project):
     if user.is_anonymous():
         return None
 
-    return user.cached_memberships.get(project.id, None)
+    return user.cached_membership_for_project(project)
 
 
 def _get_object_project(obj):

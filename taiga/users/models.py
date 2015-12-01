@@ -159,15 +159,24 @@ class User(AbstractBaseUser, PermissionsMixin):
     def __str__(self):
         return self.get_full_name()
 
+    def _fill_cached_memberships(self):
+        self._cached_memberships = {}
+        qs = self.memberships.prefetch_related("user", "project", "role")
+        for membership in qs.all():
+            self._cached_memberships[membership.project.id] = membership
+
     @property
     def cached_memberships(self):
         if self._cached_memberships is None:
-            self._cached_memberships = {}
-            qs = self.memberships.prefetch_related("user", "project")
-            for membership in qs.all():
-                self._cached_memberships[membership.project.id] = membership
+            self._fill_cached_memberships()
 
-        return self._cached_memberships
+        return self._cached_memberships.values()
+
+    def cached_membership_for_project(self, project):
+        if self._cached_memberships is None:
+            self._fill_cached_memberships()
+
+        return self._cached_memberships.get(project.id, None)
 
     def is_fan(self, obj):
         if self._cached_liked_ids is None:
